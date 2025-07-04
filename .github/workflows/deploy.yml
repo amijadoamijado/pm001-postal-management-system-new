@@ -48,9 +48,8 @@ jobs:
         SPREADSHEET_ID: ${{ secrets.SPREADSHEET_ID }}
 
     - name: Run Playwright tests
-      run: npx playwright install --with-deps
-
-    - name: Run Playwright tests
-      run: npm test
+      run: |
+        ls -la node_modules
+        npx playwright test
       env:
         GAS_WEB_APP_URL: ${{ env.GAS_WEB_APP_URL }}
