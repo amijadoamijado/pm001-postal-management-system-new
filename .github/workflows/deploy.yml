@@ -20,10 +20,13 @@ jobs:
         node-version: '18'
 
     - name: Install dependencies
-      run: npm install
+      run: npm ci
+
+    - name: Install Playwright browsers
+      run: npx playwright install --with-deps
 
     - name: Install GAS backend dependencies
-      run: npm install
+      run: npm ci
       working-directory: gas-backend
 
     - name: Build GAS code
