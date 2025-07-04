@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>郵便物発送管理システム - 発送入力画面</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .header-gradient {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 0 0 1rem 1rem;
+            margin-bottom: 2rem;
+        }
+        .step-indicator {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+            padding: 0;
+        }
+        .step {
+            flex: 1;
+            text-align: center;
+            padding: 1rem;
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            position: relative;
+            cursor: pointer;
+        }
+        .step.active {
+            background: #0d6efd;
+            color: white;
+            border-color: #0d6efd;
+        }
+        .step.completed {
+            background: #28a745;
+            color: white;
+            border-color: #28a745;
+        }
+        .step:not(:last-child):after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            right: -2px;
+            width: 30px;
+            height: 2px;
+            background: #dee2e6;
+            z-index: 1;
+        }
+        .step.completed:not(:last-child):after {
+            background: #28a745;
+        }
+        .form-section {
+            background: white;
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075);
+            margin-bottom: 1.5rem;
+        }
+        .address-selection-tab {
+            border: 2px solid #dee2e6;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .address-selection-tab:hover {
+            border-color: #0d6efd;
+            background: #f8f9ff;
+        }
+        .address-selection-tab.active {
+            border-color: #0d6efd;
+            background: #e7f1ff;
+        }
+        .address-item {
+            border: 1px solid #e9ecef;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .address-item:hover {
+            background: #f8f9fa;
+            border-color: #0d6efd;
+        }
+        .address-item.selected {
+            background: #e7f1ff;
+            border-color: #0d6efd;
+        }
+        .shipping-method-card {
+            border: 2px solid #dee2e6;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .shipping-method-card:hover {
+            border-color: #0d6efd;
+        }
+        .shipping-method-card.selected {
+            border-color: #0d6efd;
+            background: #e7f1ff;
+        }
+        .fee-display {
+            background: #f8f9fa;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            text-align: center;
+        }
+        .fee-amount {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #0d6efd;
+        }
+        .tracking-input-section {
+            background: #fff3cd;
+            border: 1px solid #ffeeba;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-top: 1rem;
+            display: none;
+        }
+        .summary-table {
+            background: #f8f9fa;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+        }
+        .frequency-badge {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.375rem;
+            margin-left: 0.5rem;
+        }
+        .frequency-very-high { background: #d4edda; color: #155724; }
+        .frequency-high { background: #d1ecf1; color: #0c5460; }
+        .frequency-medium { background: #fff3cd; color: #856404; }
+        .frequency-low { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <!-- ヘッダー -->
+        <div class="header-gradient text-center">
+            <h1><i class="fas fa-mail-bulk"></i> 郵便物発送管理システム</h1>
+            <p class="lead mb-0">発送入力画面 - 新要件対応版</p>
+        </div>
+
+        <div class="container">
+            <!-- ステップインジケーター -->
+            <div class="step-indicator">
+                <div class="step active" id="step1">
+                    <i class="fas fa-address-book fa-2x mb-2"></i>
+                    <div>Step 1</div>
+                    <small>宛名選択</small>
+                </div>
+                <div class="step" id="step2">
+                    <i class="fas fa-shipping-fast fa-2x mb-2"></i>
+                    <div>Step 2</div>
+                    <small>発送方法</small>
+                </div>
+                <div class="step" id="step3">
+                    <i class="fas fa-check-circle fa-2x mb-2"></i>
+                    <div>Step 3</div>
+                    <small>確認・発送</small>
+                </div>
+            </div>
+
+            <!-- Step 1: 宛名選択 -->
+            <div id="step1-content" class="step-content">
+                <div class="form-section">
+                    <h3><i class="fas fa-address-book text-primary"></i> 宛名選択</h3>
+                    <p class="text-muted">発送先の宛名を選択してください</p>
+
+                    <!-- 4パターン選択タブ -->
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="address-selection-tab active" onclick="selectAddressPattern('customer-db')">
+                                <i class="fas fa-database text-success fa-2x mb-2"></i>
+                                <h6>顧客データベース</h6>
+                                <small class="text-muted">登録済み顧客から選択</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="address-selection-tab" onclick="selectAddressPattern('user-history')">
+                                <i class="fas fa-user-clock text-info fa-2x mb-2"></i>
+                                <h6>個人履歴</h6>
+                                <small class="text-muted">あなたの使用履歴から</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="address-selection-tab" onclick="selectAddressPattern('popular')">
+                                <i class="fas fa-fire text-warning fa-2x mb-2"></i>
+                                <h6>全発送履歴</h6>
+                                <small class="text-muted">直近の全発送履歴から</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="address-selection-tab" onclick="selectAddressPattern('new')">
+                                <i class="fas fa-plus-circle text-danger fa-2x mb-2"></i>
+                                <h6>新規登録</h6>
+                                <small class="text-muted">新しい宛名を登録</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 検索ボックス -->
+                    <div class="mb-4">
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-search"></i></span>
+                            <input type="text" class="form-control" placeholder="宛名・会社名で検索..." id="address-search">
+                            <button class="btn btn-primary" type="button">検索</button>
+                        </div>
+                    </div>
+
+                    <!-- 宛名リスト -->
+                    <div id="address-list">
+                        <!-- 顧客データベース表示例 -->
+                        <div class="address-item">
+                            <div class="row align-items-center">
+                                <div class="col-md-8">
+                                    <h6 class="mb-1">山田 太郎 様</h6>
+                                    <p class="mb-1"><small class="text-muted">株式会社山田商事</small></p>
+                                    <p class="mb-0"><small>〒100-0001 東京都千代田区千代田1-1-1 皇居ビル3F</small></p>
+                                </div>
+                                <div class="col-md-4 text-end">
+                                    <button class="btn btn-sm btn-outline-primary">選択</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="address-item">
+                            <div class="row align-items-center">
+                                <div class="col-md-8">
+                                    <h6 class="mb-1">佐藤 花子 様 <span class="frequency-badge frequency-high">よく使用</span></h6>
+                                    <p class="mb-1"><small class="text-muted">佐藤デザイン事務所</small></p>
+                                    <p class="mb-0"><small>〒150-0001 東京都渋谷区神宮前1-2-3 クリエイティブビル5F</small></p>
+                                </div>
+                                <div class="col-md-4 text-end">
+                                    <small class="text-muted d-block">最終使用: 3日前</small>
+                                    <button class="btn btn-sm btn-outline-primary">選択</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="address-item selected">
+                            <div class="row align-items-center">
+                                <div class="col-md-8">
+                                    <h6 class="mb-1">鈴木 一郎 様 <span class="frequency-badge frequency-very-high">頻繁に使用</span></h6>
+                                    <p class="mb-1"><small class="text-muted">鈴木製造株式会社</small></p>
+                                    <p class="mb-0"><small>〒530-0001 大阪府大阪市北区梅田1-1-1 大阪駅前ビル10F</small></p>
+                                </div>
+                                <div class="col-md-4 text-end">
+                                    <small class="text-muted d-block">使用回数: 15回</small>
+                                    <button class="btn btn-sm btn-primary">選択済み</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-end mt-4">
+                        <button class="btn btn-primary btn-lg" onclick="nextStep()">
+                            次へ <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2: 発送方法選択 -->
+            <div id="step2-content" class="step-content" style="display: none;">
+                <div class="form-section">
+                    <h3><i class="fas fa-shipping-fast text-primary"></i> 発送方法選択</h3>
+                    <p class="text-muted">発送方法と詳細を入力してください</p>
+
+                    <!-- 選択された宛名表示 -->
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> 発送先: 鈴木 一郎 様（鈴木製造株式会社）- 大阪府大阪市北区梅田1-1-1
+                    </div>
+
+                    <div class="row">
+                        <!-- 発送方法選択 -->
+                        <div class="col-md-8">
+                            <h5 class="mb-3">発送方法</h5>
+                            
+                            <div class="shipping-method-card selected">
+                                <div class="row align-items-center">
+                                    <div class="col-md-8">
+                                        <h6><i class="fas fa-envelope"></i> 普通郵便（規格内）</h6>
+                                        <small class="text-muted">長辺34cm以内、短辺25cm以内、厚さ3cm以内、重量1kg以内</small>
+                                    </div>
+                                    <div class="col-md-4 text-end">
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="radio" name="shippingMethod" id="standard-regular" checked>
+                                            <label class="form-check-label" for="standard-regular">選択</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="shipping-method-card">
+                                <div class="row align-items-center">
+                                    <div class="col-md-8">
+                                        <h6><i class="fas fa-box"></i> 普通郵便（規格外）</h6>
+                                        <small class="text-muted">規格内サイズを超える郵便物</small>
+                                    </div>
+                                    <div class="col-md-4 text-end">
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="radio" name="shippingMethod" id="standard-irregular">
+                                            <label class="form-check-label" for="standard-irregular">選択</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="shipping-method-card">
+                                <div class="row align-items-center">
+                                    <div class="col-md-8">
+                                        <h6><i class="fas fa-file-alt"></i> レターパックライト</h6>
+                                        <small class="text-muted">A4サイズ、4kg以内、追跡番号付き</small>
+                                    </div>
+                                    <div class="col-md-4 text-end">
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="radio" name="shippingMethod" id="letterpack-light" onchange="toggleTrackingNumber()">
+                                            <label class="form-check-label" for="letterpack-light">選択</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="shipping-method-card" style="opacity: 0.8; transform: scale(0.95);">
+                                <div class="row align-items-center">
+                                    <div class="col-md-8">
+                                        <h6 style="font-size: 0.95rem;"><i class="fas fa-file-alt"></i> レターパックプラス</h6>
+                                        <small class="text-muted" style="font-size: 0.8rem;">A4サイズ、4kg以内、対面配達、追跡番号付き</small>
+                                    </div>
+                                    <div class="col-md-4 text-end">
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="radio" name="shippingMethod" id="letterpack-plus" onchange="toggleTrackingNumber()">
+                                            <label class="form-check-label" for="letterpack-plus">選択</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 重量入力 -->
+                            <div class="mt-4">
+                                <label class="form-label">重量（グラム）</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="weight" value="50" min="1" max="4000">
+                                    <span class="input-group-text">g</span>
+                                </div>
+                            </div>
+
+                            <!-- 投函パターン選択（必須） -->
+                            <div class="mt-4">
+                                <label class="form-label"><span class="text-danger">*</span> 投函方法（必須）</label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="postingMethod" id="metered-mail" checked required>
+                                    <label class="form-check-label" for="metered-mail">
+                                        <i class="fas fa-building"></i> 後納郵便
+                                        <small class="text-muted d-block">会社でまとめて発送（料金後払い）</small>
+                                    </label>
+                                </div>
+                                <div class="form-check mt-2">
+                                    <input class="form-check-input" type="radio" name="postingMethod" id="self-posting" required>
+                                    <label class="form-check-label" for="self-posting">
+                                        <i class="fas fa-mailbox"></i> 自分で投函する
+                                        <small class="text-muted d-block">切手を貼って個別に投函</small>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- 速達オプション -->
+                            <div class="mt-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="express">
+                                    <label class="form-check-label" for="express">
+                                        速達で送る（+250円）
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- 内容入力 -->
+                            <div class="mt-4">
+                                <label class="form-label"><span class="text-danger">*</span> 内容1（必須）</label>
+                                <select class="form-select" id="content-type" required>
+                                    <option value="">選択してください</option>
+                                    <option value="納付書">納付書</option>
+                                    <option value="書類">書類</option>
+                                    <option value="契約書">契約書</option>
+                                    <option value="請求書">請求書</option>
+                                    <option value="領収書">領収書</option>
+                                    <option value="申請書">申請書</option>
+                                    <option value="報告書">報告書</option>
+                                    <option value="その他">その他</option>
+                                </select>
+                            </div>
+
+                            <div class="mt-3">
+                                <label class="form-label">内容2（任意）</label>
+                                <input type="text" class="form-control" id="content-detail" maxlength="20" placeholder="詳細内容を入力（全角20文字まで）">
+                                <small class="text-muted">発送物の詳細を入力できます（最大全角20文字）</small>
+                            </div>
+
+                            <!-- 追跡番号入力（レターパックライト選択時のみ表示） -->
+                            <div class="tracking-input-section" id="tracking-section">
+                                <h6><i class="fas fa-barcode"></i> 追跡番号</h6>
+                                <input type="text" class="form-control" id="tracking-number" placeholder="追跡番号を入力（例：1234567890123）">
+                                <small class="text-muted">レターパックライトの追跡番号を入力してください</small>
+                            </div>
+                        </div>
+
+                        <!-- 料金表示 -->
+                        <div class="col-md-4">
+                            <div class="fee-display">
+                                <h5>料金</h5>
+                                <div class="fee-amount">¥140</div>
+                                <div class="mt-3">
+                                    <table class="table table-sm">
+                                        <tr>
+                                            <td>基本料金</td>
+                                            <td class="text-end">¥140</td>
+                                        </tr>
+                                        <tr id="express-fee-row" style="display: none;">
+                                            <td>速達料金</td>
+                                            <td class="text-end">¥250</td>
+                                        </tr>
+                                        <tr class="fw-bold">
+                                            <td>合計</td>
+                                            <td class="text-end">¥140</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- 料金表 -->
+                            <div class="mt-3">
+                                <h6>料金表</h6>
+                                <small class="text-muted">
+                                    <strong>普通郵便（規格内）</strong><br>
+                                    50g以内: ¥140<br>
+                                    100g以内: ¥180<br>
+                                    150g以内: ¥270<br>
+                                    250g以内: ¥320<br><br>
+                                    
+                                    <strong>普通郵便（規格外）</strong><br>
+                                    50g以内: ¥260<br>
+                                    100g以内: ¥290<br>
+                                    150g以内: ¥390<br>
+                                    250g以内: ¥450<br><br>
+                                    
+                                    <strong>レターパックライト</strong><br>
+                                    一律: ¥430<br><br>
+                                    
+                                    <strong>レターパックプラス</strong><br>
+                                    一律: ¥600
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between mt-4">
+                        <button class="btn btn-secondary btn-lg" onclick="prevStep()">
+                            <i class="fas fa-arrow-left"></i> 戻る
+                        </button>
+                        <button class="btn btn-primary btn-lg" onclick="nextStep()">
+                            次へ <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3: 確認・発送 -->
+            <div id="step3-content" class="step-content" style="display: none;">
+                <div class="form-section">
+                    <h3><i class="fas fa-check-circle text-primary"></i> 発送内容確認</h3>
+                    <p class="text-muted">以下の内容で発送を登録します</p>
+
+                    <div class="summary-table">
+                        <h5 class="mb-3">発送情報サマリー</h5>
+                        <table class="table">
+                            <tr>
+                                <th width="30%">宛名</th>
+                                <td>
+                                    鈴木 一郎 様<br>
+                                    <small class="text-muted">鈴木製造株式会社</small>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>送付先住所</th>
+                                <td>
+                                    〒530-0001<br>
+                                    大阪府大阪市北区梅田1-1-1 大阪駅前ビル10F
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>発送方法</th>
+                                <td>普通郵便（規格内）</td>
+                            </tr>
+                            <tr>
+                                <th>重量</th>
+                                <td>50g</td>
+                            </tr>
+                            <tr>
+                                <th>投函方法</th>
+                                <td>後納郵便</td>
+                            </tr>
+                            <tr>
+                                <th>速達</th>
+                                <td>なし</td>
+                            </tr>
+                            <tr>
+                                <th>追跡番号</th>
+                                <td>-</td>
+                            </tr>
+                            <tr>
+                                <th>内容1</th>
+                                <td id="summary-content-type">-</td>
+                            </tr>
+                            <tr>
+                                <th>内容2</th>
+                                <td id="summary-content-detail">-</td>
+                            </tr>
+                            <tr class="table-info">
+                                <th>料金</th>
+                                <td class="fs-5 fw-bold">¥140</td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <div class="alert alert-warning mt-4">
+                        <i class="fas fa-exclamation-triangle"></i> 
+                        発送登録後は内容の変更ができません。内容をよくご確認ください。
+                    </div>
+
+                    <div class="d-flex justify-content-between mt-4">
+                        <button class="btn btn-secondary btn-lg" onclick="prevStep()">
+                            <i class="fas fa-arrow-left"></i> 戻る
+                        </button>
+                        <div>
+                            <button class="btn btn-outline-success btn-lg me-2" onclick="submitShipping(false)">
+                                <i class="fas fa-save"></i> 登録のみ
+                            </button>
+                            <button class="btn btn-success btn-lg px-5 py-3" onclick="submitShipping(true)">
+                                <i class="fas fa-print"></i> 印刷して登録
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentStep = 1;
+        let selectedAddress = null;
+        let shippingData = {
+            method: 'standard_regular',
+            weight: 50,
+            express: false,
+            trackingNumber: '',
+            contentType: '',
+            contentDetail: ''
+        };
+
+        function selectAddressPattern(pattern) {
+            // タブの選択状態を更新
+            document.querySelectorAll('.address-selection-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.closest('.address-selection-tab').classList.add('active');
+
+            // パターンに応じた宛名リストを表示（実際にはAPIから取得）
+            console.log('Selected pattern:', pattern);
+        }
+
+        function nextStep() {
+            if (currentStep < 3) {
+                // Step 2から3に進む際のバリデーションとデータ保存
+                if (currentStep === 2) {
+                    // 内容1の必須チェック
+                    const contentType = document.getElementById('content-type').value;
+                    if (!contentType) {
+                        alert('内容1を選択してください。');
+                        return;
+                    }
+                    
+                    // データを保存
+                    shippingData.contentType = contentType;
+                    shippingData.contentDetail = document.getElementById('content-detail').value;
+                    
+                    // Step 3の確認画面に反映
+                    document.getElementById('summary-content-type').textContent = contentType;
+                    document.getElementById('summary-content-detail').textContent = shippingData.contentDetail || '-';
+                }
+                
+                // 現在のステップを非表示
+                document.getElementById(`step${currentStep}-content`).style.display = 'none';
+                document.getElementById(`step${currentStep}`).classList.remove('active');
+                document.getElementById(`step${currentStep}`).classList.add('completed');
+                
+                // 次のステップを表示
+                currentStep++;
+                document.getElementById(`step${currentStep}-content`).style.display = 'block';
+                document.getElementById(`step${currentStep}`).classList.add('active');
+                
+                // 料金を再計算
+                if (currentStep === 2) {
+                    calculateFee();
+                }
+            }
+        }
+
+        function prevStep() {
+            if (currentStep > 1) {
+                // 現在のステップを非表示
+                document.getElementById(`step${currentStep}-content`).style.display = 'none';
+                document.getElementById(`step${currentStep}`).classList.remove('active');
+                
+                // 前のステップを表示
+                currentStep--;
+                document.getElementById(`step${currentStep}-content`).style.display = 'block';
+                document.getElementById(`step${currentStep}`).classList.remove('completed');
+                document.getElementById(`step${currentStep}`).classList.add('active');
+            }
+        }
+
+        function toggleTrackingNumber() {
+            const isLetterpackLight = document.getElementById('letterpack-light').checked;
+            const isLetterpackPlus = document.getElementById('letterpack-plus').checked;
+            const isLetterpack = isLetterpackLight || isLetterpackPlus;
+            document.getElementById('tracking-section').style.display = isLetterpack ? 'block' : 'none';
+            calculateFee();
+        }
+
+        function calculateFee() {
+            const weight = parseInt(document.getElementById('weight').value) || 0;
+            const isExpress = document.getElementById('express').checked;
+            let baseFee = 0;
+
+            if (document.getElementById('letterpack-light').checked) {
+                baseFee = 430;
+            } else if (document.getElementById('letterpack-plus').checked) {
+                baseFee = 600;
+            } else if (document.getElementById('standard-regular').checked) {
+                // 規格内料金
+                if (weight <= 50) baseFee = 140;
+                else if (weight <= 100) baseFee = 180;
+                else if (weight <= 150) baseFee = 270;
+                else if (weight <= 250) baseFee = 320;
+                else baseFee = 320;
+            } else if (document.getElementById('standard-irregular').checked) {
+                // 規格外料金
+                if (weight <= 50) baseFee = 260;
+                else if (weight <= 100) baseFee = 290;
+                else if (weight <= 150) baseFee = 390;
+                else if (weight <= 250) baseFee = 450;
+                else baseFee = 450;
+            }
+
+            const expressFee = isExpress ? 250 : 0;
+            const totalFee = baseFee + expressFee;
+
+            // 料金表示を更新
+            document.querySelector('.fee-amount').textContent = `¥${totalFee}`;
+            document.getElementById('express-fee-row').style.display = isExpress ? '' : 'none';
+        }
+
+        function submitShipping(withPrint) {
+            if (withPrint) {
+                // 印刷して登録
+                alert('印刷画面を開きます...\n発送登録が完了しました！\n\n※これはデモ画面です。実際のシステムでは印刷処理後、GASのAPIに送信されます。');
+                // 実際のシステムでは window.print() を呼び出す
+                // window.print();
+            } else {
+                // 登録のみ
+                alert('発送登録が完了しました！\n\n※これはデモ画面です。実際のシステムではGASのAPIに送信されます。');
+            }
+        }
+
+        // イベントリスナーの設定
+        document.getElementById('weight').addEventListener('input', calculateFee);
+        document.getElementById('express').addEventListener('change', calculateFee);
+        document.querySelectorAll('input[name="shippingMethod"]').forEach(radio => {
+            radio.addEventListener('change', () => {
+                // 選択されたカードのスタイルを更新
+                document.querySelectorAll('.shipping-method-card').forEach(card => {
+                    card.classList.remove('selected');
+                });
+                radio.closest('.shipping-method-card').classList.add('selected');
+                toggleTrackingNumber();
+            });
+        });
+
+        // ステップクリックでの移動
+        document.querySelectorAll('.step').forEach((step, index) => {
+            step.addEventListener('click', () => {
+                if (step.classList.contains('completed') || step.classList.contains('active')) {
+                    // 現在のステップを非表示
+                    document.getElementById(`step${currentStep}-content`).style.display = 'none';
+                    document.getElementById(`step${currentStep}`).classList.remove('active');
+                    
+                    // クリックされたステップを表示
+                    currentStep = index + 1;
+                    document.getElementById(`step${currentStep}-content`).style.display = 'block';
+                    document.getElementById(`step${currentStep}`).classList.add('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

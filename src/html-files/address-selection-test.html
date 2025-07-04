@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PM001 4パターン宛名選択機能テスト</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .test-section {
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            border: 1px solid #dee2e6;
+            border-radius: 0.5rem;
+        }
+        .test-result {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: 0.375rem;
+            white-space: pre-wrap;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.875rem;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .test-success {
+            background-color: #d1f2eb;
+            border: 1px solid #7dcea0;
+            color: #196f3d;
+        }
+        .test-error {
+            background-color: #fadbd8;
+            border: 1px solid #e6b0aa;
+            color: #922b21;
+        }
+        .pattern-card {
+            border: 2px solid #dee2e6;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            transition: border-color 0.3s;
+        }
+        .pattern-card.active {
+            border-color: #0d6efd;
+            background-color: #f8f9ff;
+        }
+        .pattern-1 { border-left: 4px solid #28a745; }
+        .pattern-2 { border-left: 4px solid #17a2b8; }
+        .pattern-3 { border-left: 4px solid #ffc107; }
+        .pattern-4 { border-left: 4px solid #dc3545; }
+        
+        .address-item {
+            border: 1px solid #e9ecef;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            background-color: #f8f9fa;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .address-item:hover {
+            background-color: #e9ecef;
+            border-color: #0d6efd;
+        }
+        .address-item.selected {
+            background-color: #cfe2ff;
+            border-color: #0d6efd;
+        }
+        
+        .stats-badge {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.375rem;
+            margin-left: 0.5rem;
+        }
+        .frequency-very-high { background-color: #d4edda; color: #155724; }
+        .frequency-high { background-color: #d1ecf1; color: #0c5460; }
+        .frequency-medium { background-color: #fff3cd; color: #856404; }
+        .frequency-low { background-color: #f8d7da; color: #721c24; }
+        
+        .category-section {
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background-color: #f8f9fa;
+            border-radius: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <h1 class="mb-4">
+            <i class="fas fa-list-alt text-primary"></i>
+            PM001 4パターン宛名選択機能テスト
+        </h1>
+        
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i>
+            <strong>テスト前準備:</strong> 顧客管理・宛名管理テストで数件のデータを作成してからテストしてください。
+        </div>
+        
+        <!-- パターン選択タブ -->
+        <ul class="nav nav-pills mb-4" id="pattern-tabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="pattern1-tab" data-bs-toggle="pill" data-bs-target="#pattern1" type="button" role="tab">
+                    <i class="fas fa-database text-success"></i> パターン1: 顧客DB
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="pattern2-tab" data-bs-toggle="pill" data-bs-target="#pattern2" type="button" role="tab">
+                    <i class="fas fa-user-clock text-info"></i> パターン2: 個人履歴
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="pattern3-tab" data-bs-toggle="pill" data-bs-target="#pattern3" type="button" role="tab">
+                    <i class="fas fa-fire text-warning"></i> パターン3: 人気履歴
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="pattern4-tab" data-bs-toggle="pill" data-bs-target="#pattern4" type="button" role="tab">
+                    <i class="fas fa-plus-circle text-danger"></i> パターン4: 新規登録
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="integrated-tab" data-bs-toggle="pill" data-bs-target="#integrated" type="button" role="tab">
+                    <i class="fas fa-search text-secondary"></i> 統合検索
+                </button>
+            </li>
+        </ul>
+        
+        <div class="tab-content" id="pattern-content">
+            
+            <!-- パターン1: 顧客データベースから選択 -->
+            <div class="tab-pane fade show active" id="pattern1" role="tabpanel">
+                <div class="pattern-card pattern-1">
+                    <h3><i class="fas fa-database text-success"></i> パターン1: 顧客データベースから選択</h3>
+                    <p class="text-muted">登録済み顧客とその宛名から選択します</p>
+                    
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">検索キーワード</label>
+                                <input type="text" class="form-control" id="pattern1-search" placeholder="顧客名・会社名・メールで検索">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label class="form-label">ソート順</label>
+                                <select class="form-control" id="pattern1-sort">
+                                    <option value="name">顧客名順</option>
+                                    <option value="companyName">会社名順</option>
+                                    <option value="addressCount">宛名数順</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label class="form-label">顧客タイプ</label>
+                                <select class="form-control" id="pattern1-filter">
+                                    <option value="">全て</option>
+                                    <option value="company_only">法人のみ</option>
+                                    <option value="individual_only">個人のみ</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="mb-3">
+                                <label class="form-label">件数</label>
+                                <input type="number" class="form-control" id="pattern1-limit" value="20" min="1" max="100">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button class="btn btn-success" onclick="testPattern1()">
+                        <i class="fas fa-search"></i> 顧客データベース検索
+                    </button>
+                    
+                    <div id="pattern1-result" class="test-result" style="display: none;"></div>
+                    <div id="pattern1-display" class="mt-3"></div>
+                </div>
+            </div>
+            
+            <!-- パターン2: ユーザー履歴から選択 -->
+            <div class="tab-pane fade" id="pattern2" role="tabpanel">
+                <div class="pattern-card pattern-2">
+                    <h3><i class="fas fa-user-clock text-info"></i> パターン2: 個人履歴から選択</h3>
+                    <p class="text-muted">ログインユーザーの過去使用履歴から選択します</p>
+                    
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label class="form-label">ソート順</label>
+                                <select class="form-control" id="pattern2-sort">
+                                    <option value="lastUsed">最終使用日順</option>
+                                    <option value="usageCount">使用回数順</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label class="form-label">最小使用回数</label>
+                                <input type="number" class="form-control" id="pattern2-min-usage" value="1" min="1">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label class="form-label">件数</label>
+                                <input type="number" class="form-control" id="pattern2-limit" value="30" min="1" max="100">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-check mt-4">
+                                <input class="form-check-input" type="checkbox" id="pattern2-include-stats" checked>
+                                <label class="form-check-label" for="pattern2-include-stats">
+                                    使用統計を含める
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button class="btn btn-info" onclick="testPattern2()">
+                        <i class="fas fa-history"></i> 個人履歴検索
+                    </button>
+                    
+                    <div id="pattern2-result" class="test-result" style="display: none;"></div>
+                    <div id="pattern2-display" class="mt-3"></div>
+                </div>
+            </div>
+            
+            <!-- パターン3: 全員の履歴から選択 -->
+            <div class="tab-pane fade" id="pattern3" role="tabpanel">
+                <div class="pattern-card pattern-3">
+                    <h3><i class="fas fa-fire text-warning"></i> パターン3: 人気履歴から選択</h3>
+                    <p class="text-muted">全員の使用履歴から人気の宛名を選択します</p>
+                    
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label class="form-label">ソート順</label>
+                                <select class="form-control" id="pattern3-sort">
+                                    <option value="totalUsage">総使用回数順</option>
+                                    <option value="lastUsed">最終使用日順</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label class="form-label">最小使用回数</label>
+                                <input type="number" class="form-control" id="pattern3-min-usage" value="2" min="1">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label class="form-label">件数</label>
+                                <input type="number" class="form-control" id="pattern3-limit" value="50" min="1" max="100">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-check mt-2">
+                                <input class="form-check-input" type="checkbox" id="pattern3-exclude-self">
+                                <label class="form-check-label" for="pattern3-exclude-self">
+                                    自分の履歴を除外
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="pattern3-include-breakdown">
+                                <label class="form-check-label" for="pattern3-include-breakdown">
+                                    ユーザー内訳を含める
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button class="btn btn-warning" onclick="testPattern3()">
+                        <i class="fas fa-chart-line"></i> 人気履歴検索
+                    </button>
+                    
+                    <div id="pattern3-result" class="test-result" style="display: none;"></div>
+                    <div id="pattern3-display" class="mt-3"></div>
+                </div>
+            </div>
+            
+            <!-- パターン4: 新規宛名登録 -->
+            <div class="tab-pane fade" id="pattern4" role="tabpanel">
+                <div class="pattern-card pattern-4">
+                    <h3><i class="fas fa-plus-circle text-danger"></i> パターン4: 新規宛名登録</h3>
+                    <p class="text-muted">新しい宛名を登録します</p>
+                    
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" id="pattern4-include-customers" checked>
+                                <label class="form-check-label" for="pattern4-include-customers">
+                                    顧客一覧を含める
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" id="pattern4-include-templates" checked>
+                                <label class="form-check-label" for="pattern4-include-templates">
+                                    住所テンプレートを含める
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" id="pattern4-include-help" checked>
+                                <label class="form-check-label" for="pattern4-include-help">
+                                    郵便番号ヘルプを含める
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button class="btn btn-danger" onclick="testPattern4()">
+                        <i class="fas fa-plus"></i> 新規登録フォームデータ取得
+                    </button>
+                    
+                    <div id="pattern4-result" class="test-result" style="display: none;"></div>
+                    <div id="pattern4-display" class="mt-3"></div>
+                </div>
+            </div>
+            
+            <!-- 統合検索 -->
+            <div class="tab-pane fade" id="integrated" role="tabpanel">
+                <div class="pattern-card">
+                    <h3><i class="fas fa-search text-secondary"></i> 統合検索テスト</h3>
+                    <p class="text-muted">全パターンを横断して検索します</p>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">検索キーワード</label>
+                                <input type="text" class="form-control" id="integrated-search" placeholder="宛名・住所・顧客名で検索">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label class="form-label">最大件数</label>
+                                <input type="number" class="form-control" id="integrated-limit" value="20" min="1" max="100">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <button class="btn btn-secondary mt-4" onclick="testIntegratedSearch()">
+                                <i class="fas fa-search"></i> 統合検索実行
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div id="integrated-result" class="test-result" style="display: none;"></div>
+                    <div id="integrated-display" class="mt-3"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 選択された宛名表示 -->
+        <div class="card mt-4" id="selected-address-card" style="display: none;">
+            <div class="card-header">
+                <h5><i class="fas fa-check-circle text-success"></i> 選択された宛名</h5>
+            </div>
+            <div class="card-body" id="selected-address-display">
+            </div>
+        </div>
+        
+        <!-- キャッシュ管理 -->
+        <div class="test-section">
+            <h3><i class="fas fa-memory text-secondary"></i> キャッシュ管理</h3>
+            <button class="btn btn-outline-secondary" onclick="clearCaches()">
+                <i class="fas fa-trash"></i> 選択キャッシュクリア
+            </button>
+            <div id="cache-result" class="mt-2"></div>
+        </div>
+        
+        <!-- 全パターンテスト -->
+        <div class="test-section">
+            <h3><i class="fas fa-play text-dark"></i> 全パターン統合テスト</h3>
+            <button class="btn btn-dark btn-lg" onclick="runAllPatternTests()">
+                <i class="fas fa-cogs"></i> 全パターンテスト実行
+            </button>
+            <div id="all-pattern-tests-result" class="test-result" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // GASのベースURL（実際のデプロイ時に更新）
+        const BASE_URL = 'https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec';
+        
+        // 選択された宛名
+        let selectedAddress = null;
+        
+        // API呼び出し共通関数
+        async function callAPI(action, data = {}) {
+            try {
+                const response = await fetch(BASE_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: action,
+                        data: data
+                    })
+                });
+                
+                return await response.json();
+            } catch (error) {
+                return {
+                    success: false,
+                    error: {
+                        message: error.message,
+                        type: 'NETWORK_ERROR'
+                    }
+                };
+            }
+        }
+        
+        // 結果表示共通関数
+        function displayResult(elementId, result, isSuccess = null) {
+            const element = document.getElementById(elementId);
+            element.style.display = 'block';
+            
+            if (isSuccess === null) {
+                isSuccess = result.success;
+            }
+            
+            element.className = isSuccess ? 'test-result test-success' : 'test-result test-error';
+            element.textContent = JSON.stringify(result, null, 2);
+        }
+        
+        // パターン1テスト
+        async function testPattern1() {
+            const options = {
+                searchQuery: document.getElementById('pattern1-search').value,
+                sortBy: document.getElementById('pattern1-sort').value,
+                limit: parseInt(document.getElementById('pattern1-limit').value),
+                includeAddressCount: true,
+                companyFilter: document.getElementById('pattern1-filter').value || null
+            };
+            
+            const result = await callAPI('getAddressSelection', {
+                selectionType: 'customer_db',
+                options: options
+            });
+            
+            displayResult('pattern1-result', result);
+            
+            if (result.success && result.data) {
+                displayCustomerDatabase(result.data);
+            }
+        }
+        
+        // パターン2テスト
+        async function testPattern2() {
+            const options = {
+                sortBy: document.getElementById('pattern2-sort').value,
+                minUsageCount: parseInt(document.getElementById('pattern2-min-usage').value),
+                limit: parseInt(document.getElementById('pattern2-limit').value),
+                includeUsageStats: document.getElementById('pattern2-include-stats').checked
+            };
+            
+            const result = await callAPI('getAddressSelection', {
+                selectionType: 'user_history',
+                options: options
+            });
+            
+            displayResult('pattern2-result', result);
+            
+            if (result.success && result.data) {
+                displayUserHistory(result.data);
+            }
+        }
+        
+        // パターン3テスト
+        async function testPattern3() {
+            const options = {
+                sortBy: document.getElementById('pattern3-sort').value,
+                minTotalUsage: parseInt(document.getElementById('pattern3-min-usage').value),
+                limit: parseInt(document.getElementById('pattern3-limit').value),
+                excludeCurrentUser: document.getElementById('pattern3-exclude-self').checked,
+                includeUserBreakdown: document.getElementById('pattern3-include-breakdown').checked,
+                currentUserId: 'test_user'
+            };
+            
+            const result = await callAPI('getAddressSelection', {
+                selectionType: 'all_history',
+                options: options
+            });
+            
+            displayResult('pattern3-result', result);
+            
+            if (result.success && result.data) {
+                displayAllHistory(result.data);
+            }
+        }
+        
+        // パターン4テスト
+        async function testPattern4() {
+            const options = {
+                includeCustomerList: document.getElementById('pattern4-include-customers').checked,
+                includeAddressTemplates: document.getElementById('pattern4-include-templates').checked,
+                includeZipCodeHelp: document.getElementById('pattern4-include-help').checked
+            };
+            
+            const result = await callAPI('getAddressSelection', {
+                selectionType: 'new_address',
+                options: options
+            });
+            
+            displayResult('pattern4-result', result);
+            
+            if (result.success && result.data) {
+                displayNewAddressForm(result.data);
+            }
+        }
+        
+        // 統合検索テスト
+        async function testIntegratedSearch() {
+            const searchQuery = document.getElementById('integrated-search').value;
+            if (!searchQuery) {
+                alert('検索キーワードを入力してください');
+                return;
+            }
+            
+            const options = {
+                limit: parseInt(document.getElementById('integrated-limit').value)
+            };
+            
+            const result = await callAPI('searchAcrossAllPatterns', {
+                searchQuery: searchQuery,
+                options: options
+            });
+            
+            displayResult('integrated-result', result);
+            
+            if (result.success && result.data) {
+                displayIntegratedResults(result.data);
+            }
+        }
+        
+        // 顧客データベース表示
+        function displayCustomerDatabase(data) {
+            const container = document.getElementById('pattern1-display');
+            container.innerHTML = '';
+            
+            if (!data.customers || data.customers.length === 0) {
+                container.innerHTML = '<p class="text-muted">該当する顧客が見つかりませんでした</p>';
+                return;
+            }
+            
+            const statsHtml = `
+                <div class="alert alert-info mb-3">
+                    <i class="fas fa-info-circle"></i>
+                    検索結果: ${data.displayCount}件 / 総件数: ${data.totalFound}件
+                </div>
+            `;
+            container.innerHTML = statsHtml;
+            
+            data.customers.forEach(customer => {
+                const customerDiv = document.createElement('div');
+                customerDiv.className = 'category-section';
+                
+                customerDiv.innerHTML = `
+                    <h6>${customer.displayText}</h6>
+                    <div class="row">
+                        ${customer.addresses.map(address => `
+                            <div class="col-md-6 mb-2">
+                                <div class="address-item" onclick="selectAddress('${address.id}', '${address.recipientName}', 'customer_db')">
+                                    <strong>${address.recipientName}</strong><br>
+                                    <small>${address.zipCode} ${address.address}</small>
+                                    ${address.buildingName ? `<br><small class="text-muted">${address.buildingName}</small>` : ''}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                
+                container.appendChild(customerDiv);
+            });
+        }
+        
+        // ユーザー履歴表示
+        function displayUserHistory(data) {
+            const container = document.getElementById('pattern2-display');
+            container.innerHTML = '';
+            
+            if (!data.userHistory || data.userHistory.length === 0) {
+                container.innerHTML = '<p class="text-muted">使用履歴が見つかりませんでした</p>';
+                return;
+            }
+            
+            // 統計情報表示
+            const statsHtml = `
+                <div class="alert alert-primary mb-3">
+                    <i class="fas fa-chart-bar"></i>
+                    <strong>あなたの履歴統計:</strong>
+                    総宛名数: ${data.stats.totalAddresses}件 | 
+                    総使用回数: ${data.stats.totalUsage}回 | 
+                    平均使用回数: ${data.stats.averageUsage}回
+                </div>
+            `;
+            container.innerHTML = statsHtml;
+            
+            // カテゴリ別表示
+            const categories = [
+                { key: 'veryHigh', label: '頻繁に使用', class: 'frequency-very-high' },
+                { key: 'high', label: 'よく使用', class: 'frequency-high' },
+                { key: 'medium', label: '時々使用', class: 'frequency-medium' },
+                { key: 'low', label: 'たまに使用', class: 'frequency-low' }
+            ];
+            
+            categories.forEach(category => {
+                const items = data.categories[category.key] || [];
+                if (items.length > 0) {
+                    const categoryDiv = document.createElement('div');
+                    categoryDiv.className = 'category-section';
+                    
+                    categoryDiv.innerHTML = `
+                        <h6><span class="stats-badge ${category.class}">${category.label}</span></h6>
+                        <div class="row">
+                            ${items.map(item => `
+                                <div class="col-md-6 mb-2">
+                                    <div class="address-item" onclick="selectAddress('${item.addressId}', '${item.addressInfo?.recipientName}', 'user_history')">
+                                        <strong>${item.addressInfo?.recipientName}</strong>
+                                        <span class="stats-badge ${category.class}">${item.usageCount}回</span><br>
+                                        <small>${item.addressInfo?.zipCode} ${item.addressInfo?.address}</small><br>
+                                        <small class="text-muted">最終使用: ${item.lastUsedDisplay}</small>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                    
+                    container.appendChild(categoryDiv);
+                }
+            });
+        }
+        
+        // 全履歴表示
+        function displayAllHistory(data) {
+            const container = document.getElementById('pattern3-display');
+            container.innerHTML = '';
+            
+            if (!data.popularAddresses || data.popularAddresses.length === 0) {
+                container.innerHTML = '<p class="text-muted">人気の宛名が見つかりませんでした</p>';
+                return;
+            }
+            
+            const statsHtml = `
+                <div class="alert alert-warning mb-3">
+                    <i class="fas fa-fire"></i>
+                    <strong>人気履歴統計:</strong>
+                    総宛名数: ${data.stats.totalAddresses}件 | 
+                    総使用回数: ${data.stats.totalUsage}回 | 
+                    利用ユーザー数: ${data.stats.uniqueUsers}名
+                </div>
+            `;
+            container.innerHTML = statsHtml;
+            
+            data.popularAddresses.forEach(item => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'col-md-6 mb-2';
+                
+                itemDiv.innerHTML = `
+                    <div class="address-item" onclick="selectAddress('${item.addressId}', '${item.addressInfo?.recipientName}', 'all_history')">
+                        <strong>${item.addressInfo?.recipientName}</strong>
+                        <span class="badge bg-warning">${item.totalUsage}回使用</span><br>
+                        <small>${item.addressInfo?.zipCode} ${item.addressInfo?.address}</small><br>
+                        <small class="text-muted">最終使用: ${item.lastUsedDisplay}</small>
+                        ${item.userBreakdown ? `<br><small class="text-info">利用者: ${item.userBreakdown.length}名</small>` : ''}
+                    </div>
+                `;
+                
+                container.appendChild(itemDiv);
+            });
+        }
+        
+        // 新規登録フォーム表示
+        function displayNewAddressForm(data) {
+            const container = document.getElementById('pattern4-display');
+            container.innerHTML = '';
+            
+            let formHtml = '<div class="alert alert-success mb-3"><i class="fas fa-plus"></i> 新規宛名登録フォーム準備完了</div>';
+            
+            if (data.availableCustomers && data.availableCustomers.length > 0) {
+                formHtml += `
+                    <div class="category-section">
+                        <h6>利用可能な顧客 (${data.availableCustomers.length}件)</h6>
+                        <div class="row">
+                            ${data.availableCustomers.slice(0, 10).map(customer => `
+                                <div class="col-md-6 mb-2">
+                                    <div class="address-item" onclick="selectCustomerForNewAddress('${customer.id}', '${customer.displayText}')">
+                                        <small>${customer.displayText}</small>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                        ${data.availableCustomers.length > 10 ? `<small class="text-muted">他 ${data.availableCustomers.length - 10}件...</small>` : ''}
+                    </div>
+                `;
+            }
+            
+            if (data.addressTemplates) {
+                formHtml += `
+                    <div class="category-section">
+                        <h6>住所テンプレート</h6>
+                        <div class="row">
+                            ${data.addressTemplates.map(template => `
+                                <div class="col-md-4 mb-2">
+                                    <div class="address-item" onclick="selectAddressTemplate('${template.name}')">
+                                        <strong>${template.name}</strong><br>
+                                        <small>${template.zipCode} ${template.address}</small>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            container.innerHTML = formHtml;
+        }
+        
+        // 統合結果表示
+        function displayIntegratedResults(data) {
+            const container = document.getElementById('integrated-display');
+            container.innerHTML = '';
+            
+            if (!data.results || data.results.length === 0) {
+                container.innerHTML = '<p class="text-muted">検索結果が見つかりませんでした</p>';
+                return;
+            }
+            
+            const statsHtml = `
+                <div class="alert alert-secondary mb-3">
+                    <i class="fas fa-search"></i>
+                    <strong>統合検索結果:</strong> "${data.searchQuery}" で ${data.totalFound}件見つかりました<br>
+                    <small>
+                        顧客DB: ${data.sources.customer_db}件 | 
+                        個人履歴: ${data.sources.user_history}件 | 
+                        人気履歴: ${data.sources.all_history}件
+                    </small>
+                </div>
+            `;
+            container.innerHTML = statsHtml;
+            
+            data.results.forEach(result => {
+                const resultDiv = document.createElement('div');
+                resultDiv.className = 'col-md-6 mb-2';
+                
+                const sourceBadge = {
+                    'customer_db': '<span class="badge bg-success">顧客DB</span>',
+                    'user_history': '<span class="badge bg-info">個人履歴</span>',
+                    'all_history': '<span class="badge bg-warning">人気履歴</span>'
+                };
+                
+                resultDiv.innerHTML = `
+                    <div class="address-item" onclick="selectAddress('${result.data.id}', '${result.data.recipientName}', 'integrated')">
+                        <strong>${result.data.recipientName}</strong>
+                        ${sourceBadge[result.source]}
+                        ${result.usageCount ? `<span class="badge bg-secondary">${result.usageCount}回</span>` : ''}
+                        ${result.totalUsage ? `<span class="badge bg-secondary">${result.totalUsage}回</span>` : ''}<br>
+                        <small>${result.data.zipCode} ${result.data.address}</small><br>
+                        <small class="text-muted">${result.customer?.name || ''}${result.customer?.companyName ? ' (' + result.customer.companyName + ')' : ''}</small>
+                    </div>
+                `;
+                
+                container.appendChild(resultDiv);
+            });
+        }
+        
+        // 宛名選択
+        function selectAddress(addressId, recipientName, source) {
+            selectedAddress = {
+                id: addressId,
+                recipientName: recipientName,
+                source: source,
+                selectedAt: new Date()
+            };
+            
+            // 選択表示を更新
+            const selectedCard = document.getElementById('selected-address-card');
+            const selectedDisplay = document.getElementById('selected-address-display');
+            
+            selectedDisplay.innerHTML = `
+                <div class="row">
+                    <div class="col-md-8">
+                        <h6>${recipientName}</h6>
+                        <p class="mb-1">宛名ID: ${addressId}</p>
+                        <p class="mb-1">選択元: ${source}</p>
+                        <small class="text-muted">選択時刻: ${selectedAddress.selectedAt.toLocaleString('ja-JP')}</small>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <button class="btn btn-primary" onclick="useSelectedAddress()">
+                            <i class="fas fa-check"></i> この宛名を使用
+                        </button>
+                        <button class="btn btn-outline-secondary ms-2" onclick="clearSelection()">
+                            <i class="fas fa-times"></i> 選択解除
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            selectedCard.style.display = 'block';
+            
+            // 既存の選択をクリア
+            document.querySelectorAll('.address-item.selected').forEach(item => {
+                item.classList.remove('selected');
+            });
+            
+            // 新しい選択をハイライト
+            event.target.closest('.address-item').classList.add('selected');
+        }
+        
+        // 顧客選択（新規宛名用）
+        function selectCustomerForNewAddress(customerId, displayText) {
+            alert(`顧客を選択しました: ${displayText}\n実際の実装では、この顧客での新規宛名登録フォームに移行します。`);
+        }
+        
+        // 住所テンプレート選択
+        function selectAddressTemplate(templateName) {
+            alert(`住所テンプレートを選択しました: ${templateName}\n実際の実装では、このテンプレートを新規登録フォームに適用します。`);
+        }
+        
+        // 選択された宛名を使用
+        function useSelectedAddress() {
+            if (!selectedAddress) {
+                alert('宛名が選択されていません');
+                return;
+            }
+            
+            alert(`宛名を使用します: ${selectedAddress.recipientName}\n実際の実装では、発送処理などに進みます。`);
+        }
+        
+        // 選択解除
+        function clearSelection() {
+            selectedAddress = null;
+            document.getElementById('selected-address-card').style.display = 'none';
+            document.querySelectorAll('.address-item.selected').forEach(item => {
+                item.classList.remove('selected');
+            });
+        }
+        
+        // キャッシュクリア
+        async function clearCaches() {
+            const result = await callAPI('clearSelectionCaches');
+            
+            const cacheResult = document.getElementById('cache-result');
+            if (result.success) {
+                cacheResult.innerHTML = '<small class="text-success">✅ キャッシュをクリアしました</small>';
+            } else {
+                cacheResult.innerHTML = '<small class="text-danger">❌ キャッシュクリアに失敗しました</small>';
+            }
+            
+            setTimeout(() => {
+                cacheResult.innerHTML = '';
+            }, 3000);
+        }
+        
+        // 全パターンテスト
+        async function runAllPatternTests() {
+            const allTestsResult = document.getElementById('all-pattern-tests-result');
+            allTestsResult.style.display = 'block';
+            allTestsResult.className = 'test-result';
+            allTestsResult.textContent = '全パターンテスト実行中...\n';
+            
+            const tests = [
+                { name: 'パターン1: 顧客DB', func: testPattern1 },
+                { name: 'パターン2: 個人履歴', func: testPattern2 },
+                { name: 'パターン3: 人気履歴', func: testPattern3 },
+                { name: 'パターン4: 新規登録', func: testPattern4 }
+            ];
+            
+            let passedTests = 0;
+            
+            for (const test of tests) {
+                try {
+                    allTestsResult.textContent += `${test.name}テスト実行中...\n`;
+                    await test.func();
+                    allTestsResult.textContent += `${test.name}テスト: 完了\n`;
+                    passedTests++;
+                } catch (error) {
+                    allTestsResult.textContent += `${test.name}テスト: エラー - ${error.message}\n`;
+                }
+                
+                // 少し待機
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+            
+            // 統合検索もテスト
+            try {
+                document.getElementById('integrated-search').value = 'テスト';
+                allTestsResult.textContent += '統合検索テスト実行中...\n';
+                await testIntegratedSearch();
+                allTestsResult.textContent += '統合検索テスト: 完了\n';
+                passedTests++;
+            } catch (error) {
+                allTestsResult.textContent += `統合検索テスト: エラー - ${error.message}\n`;
+            }
+            
+            const totalTests = tests.length + 1;
+            const allPassed = passedTests === totalTests;
+            allTestsResult.className = allPassed ? 'test-result test-success' : 'test-result test-error';
+            allTestsResult.textContent += `\n全テスト完了: ${passedTests}/${totalTests} 成功`;
+        }
+        
+        // ページ読み込み時の処理
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('PM001 4パターン宛名選択機能テストページが読み込まれました');
+        });
+    </script>
+</body>
+</html>

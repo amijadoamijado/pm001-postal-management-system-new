@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PM001 宛名管理機能テスト</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .test-section {
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            border: 1px solid #dee2e6;
+            border-radius: 0.5rem;
+        }
+        .test-result {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: 0.375rem;
+            white-space: pre-wrap;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.875rem;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .test-success {
+            background-color: #d1f2eb;
+            border: 1px solid #7dcea0;
+            color: #196f3d;
+        }
+        .test-error {
+            background-color: #fadbd8;
+            border: 1px solid #e6b0aa;
+            color: #922b21;
+        }
+        .address-card {
+            border: 1px solid #dee2e6;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f8f9fa;
+        }
+        .usage-stats {
+            background-color: #e3f2fd;
+            padding: 0.5rem;
+            border-radius: 0.25rem;
+            margin-top: 0.5rem;
+            font-size: 0.875rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <h1 class="mb-4">
+            <i class="fas fa-map-marker-alt text-primary"></i>
+            PM001 宛名管理機能テスト
+        </h1>
+        
+        <!-- 宛名登録テスト -->
+        <div class="test-section">
+            <h3><i class="fas fa-plus-circle text-success"></i> 宛名登録テスト</h3>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">顧客ID</label>
+                        <input type="text" class="form-control" id="address-customer-id" placeholder="既存の顧客IDを入力">
+                        <small class="form-text text-muted">先に顧客管理テストで顧客を作成してください</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">宛名</label>
+                        <input type="text" class="form-control" id="address-recipient" value="田中花子">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">郵便番号</label>
+                        <input type="text" class="form-control" id="address-zipcode" value="100-0001" pattern="[0-9]{3}-[0-9]{4}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">住所</label>
+                        <input type="text" class="form-control" id="address-address" value="東京都千代田区千代田1-1">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">建物名</label>
+                        <input type="text" class="form-control" id="address-building" value="テストビル101号室">
+                    </div>
+                    <button class="btn btn-success" onclick="testSaveAddress()">
+                        <i class="fas fa-save"></i> 宛名登録テスト
+                    </button>
+                </div>
+                <div class="col-md-6">
+                    <h5>郵便番号住所候補テスト</h5>
+                    <div class="mb-3">
+                        <label class="form-label">郵便番号入力</label>
+                        <input type="text" class="form-control" id="zipcode-lookup" value="100-0001">
+                        <button class="btn btn-info btn-sm mt-2" onclick="testAddressSuggestions()">
+                            <i class="fas fa-search"></i> 住所候補取得
+                        </button>
+                    </div>
+                    <div id="address-suggestions" class="mt-2"></div>
+                </div>
+            </div>
+            <div id="save-address-result" class="test-result" style="display: none;"></div>
+        </div>
+        
+        <!-- 宛名一覧テスト -->
+        <div class="test-section">
+            <h3><i class="fas fa-list text-warning"></i> 宛名一覧取得テスト</h3>
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label class="form-label">顧客ID（任意）</label>
+                        <input type="text" class="form-control" id="list-customer-id" placeholder="全宛名の場合は空">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label class="form-label">ページ</label>
+                        <input type="number" class="form-control" id="list-page" value="1" min="1">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label class="form-label">件数</label>
+                        <input type="number" class="form-control" id="list-limit" value="20" min="1" max="100">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label class="form-label">ソート</label>
+                        <select class="form-control" id="list-sort">
+                            <option value="recipientName">宛名順</option>
+                            <option value="zipCode">郵便番号順</option>
+                            <option value="createdAt">作成日順</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" id="include-usage-stats">
+                <label class="form-check-label" for="include-usage-stats">
+                    使用統計を含める
+                </label>
+            </div>
+            <button class="btn btn-warning" onclick="testGetAddressList()">
+                <i class="fas fa-search"></i> 宛名一覧取得テスト
+            </button>
+            <div id="address-list-result" class="test-result" style="display: none;"></div>
+            <div id="address-list-display" class="mt-3"></div>
+        </div>
+        
+        <!-- 宛名検索テスト -->
+        <div class="test-section">
+            <h3><i class="fas fa-search text-primary"></i> 宛名検索テスト</h3>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label">検索キーワード</label>
+                        <input type="text" class="form-control" id="search-query" value="田中">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label">郵便番号前方一致</label>
+                        <input type="text" class="form-control" id="search-zipcode-prefix" value="100">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label">使用履歴</label>
+                        <select class="form-control" id="search-has-usage">
+                            <option value="">全て</option>
+                            <option value="true">使用履歴あり</option>
+                            <option value="false">使用履歴なし</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" id="search-include-customer" checked>
+                <label class="form-check-label" for="search-include-customer">
+                    顧客情報を含める
+                </label>
+            </div>
+            <button class="btn btn-primary" onclick="testAdvancedAddressSearch()">
+                <i class="fas fa-search-plus"></i> 高度検索テスト
+            </button>
+            <div id="address-search-result" class="test-result" style="display: none;"></div>
+        </div>
+        
+        <!-- 宛名詳細テスト -->
+        <div class="test-section">
+            <h3><i class="fas fa-info-circle text-secondary"></i> 宛名詳細取得テスト</h3>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">宛名ID</label>
+                        <input type="text" class="form-control" id="detail-address-id" placeholder="宛名IDを入力">
+                    </div>
+                    <button class="btn btn-secondary" onclick="testGetAddressDetail()">
+                        <i class="fas fa-info"></i> 宛名詳細取得テスト
+                    </button>
+                    <button class="btn btn-outline-primary ms-2" onclick="testDuplicateAddress()">
+                        <i class="fas fa-copy"></i> 宛名複製テスト
+                    </button>
+                </div>
+            </div>
+            <div id="address-detail-result" class="test-result" style="display: none;"></div>
+        </div>
+        
+        <!-- 宛名編集テスト -->
+        <div class="test-section">
+            <h3><i class="fas fa-edit text-info"></i> 宛名編集テスト</h3>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">編集対象宛名ID</label>
+                        <input type="text" class="form-control" id="edit-address-id" placeholder="編集する宛名IDを入力">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">新しい宛名</label>
+                        <input type="text" class="form-control" id="edit-recipient" value="田中花子（編集済み）">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">新しい住所</label>
+                        <input type="text" class="form-control" id="edit-address" value="東京都千代田区千代田2-2">
+                    </div>
+                    <button class="btn btn-info" onclick="testUpdateAddress()">
+                        <i class="fas fa-save"></i> 宛名更新テスト
+                    </button>
+                </div>
+            </div>
+            <div id="update-address-result" class="test-result" style="display: none;"></div>
+        </div>
+        
+        <!-- CSV インポート・エクスポートテスト -->
+        <div class="test-section">
+            <h3><i class="fas fa-file-import text-success"></i> CSV インポート・エクスポートテスト</h3>
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>インポートテスト</h5>
+                    <div class="mb-3">
+                        <label class="form-label">CSVデータ（サンプル）</label>
+                        <textarea class="form-control" id="csv-import-data" rows="4">customerId,recipientName,zipCode,address,buildingName
+CUST_123,佐藤一郎,150-0001,東京都渋谷区神宮前1-1,サンプルマンション301
+CUST_123,鈴木二郎,160-0001,東京都新宿区新宿1-1,テストタワー502</textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">デフォルト顧客ID（customerId列がない場合）</label>
+                        <input type="text" class="form-control" id="default-customer-id" placeholder="省略可">
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="skip-address-duplicates" checked>
+                        <label class="form-check-label" for="skip-address-duplicates">
+                            重複をスキップ
+                        </label>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="validate-address-only">
+                        <label class="form-check-label" for="validate-address-only">
+                            検証のみ（実際にはインポートしない）
+                        </label>
+                    </div>
+                    <button class="btn btn-success" onclick="testImportAddresses()">
+                        <i class="fas fa-upload"></i> インポートテスト
+                    </button>
+                </div>
+                <div class="col-md-6">
+                    <h5>エクスポートテスト</h5>
+                    <div class="mb-3">
+                        <label class="form-label">顧客ID（特定顧客のみ）</label>
+                        <input type="text" class="form-control" id="export-customer-id" placeholder="全宛名の場合は空">
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="export-include-customer" checked>
+                        <label class="form-check-label" for="export-include-customer">
+                            顧客情報を含める
+                        </label>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="export-include-usage">
+                        <label class="form-check-label" for="export-include-usage">
+                            使用統計を含める
+                        </label>
+                    </div>
+                    <button class="btn btn-danger" onclick="testExportAddresses()">
+                        <i class="fas fa-download"></i> エクスポートテスト
+                    </button>
+                </div>
+            </div>
+            <div id="import-export-result" class="test-result" style="display: none;"></div>
+        </div>
+        
+        <!-- 宛名削除テスト -->
+        <div class="test-section">
+            <h3><i class="fas fa-trash text-danger"></i> 宛名削除テスト</h3>
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle"></i>
+                <strong>注意:</strong> 削除は元に戻せません。テスト用のデータのみで実行してください。
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">削除対象宛名ID</label>
+                        <input type="text" class="form-control" id="delete-address-id" placeholder="削除する宛名IDを入力">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">削除理由</label>
+                        <input type="text" class="form-control" id="delete-reason" value="テスト削除">
+                    </div>
+                    <button class="btn btn-danger" onclick="testDeleteAddress()">
+                        <i class="fas fa-trash"></i> 宛名削除テスト
+                    </button>
+                </div>
+            </div>
+            <div id="delete-address-result" class="test-result" style="display: none;"></div>
+        </div>
+        
+        <!-- 全機能テスト -->
+        <div class="test-section">
+            <h3><i class="fas fa-play text-dark"></i> 全機能統合テスト</h3>
+            <div class="mb-3">
+                <label class="form-label">テスト用顧客ID</label>
+                <input type="text" class="form-control" id="test-customer-id" placeholder="既存の顧客IDを入力（必須）">
+                <small class="form-text text-muted">先に顧客管理テストで顧客を作成し、そのIDを入力してください</small>
+            </div>
+            <button class="btn btn-dark btn-lg" onclick="runAllAddressTests()">
+                <i class="fas fa-cogs"></i> 全機能テスト実行
+            </button>
+            <div id="all-address-tests-result" class="test-result" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // GASのベースURL（実際のデプロイ時に更新）
+        const BASE_URL = 'https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec';
+        
+        // API呼び出し共通関数
+        async function callAPI(action, data = {}) {
+            try {
+                const response = await fetch(BASE_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: action,
+                        data: data
+                    })
+                });
+                
+                return await response.json();
+            } catch (error) {
+                return {
+                    success: false,
+                    error: {
+                        message: error.message,
+                        type: 'NETWORK_ERROR'
+                    }
+                };
+            }
+        }
+        
+        // 結果表示共通関数
+        function displayResult(elementId, result, isSuccess = null) {
+            const element = document.getElementById(elementId);
+            element.style.display = 'block';
+            
+            if (isSuccess === null) {
+                isSuccess = result.success;
+            }
+            
+            element.className = isSuccess ? 'test-result test-success' : 'test-result test-error';
+            element.textContent = JSON.stringify(result, null, 2);
+        }
+        
+        // 宛名登録テスト
+        async function testSaveAddress() {
+            const customerId = document.getElementById('address-customer-id').value;
+            if (!customerId) {
+                alert('顧客IDを入力してください');
+                return;
+            }
+            
+            const addressData = {
+                customerId: customerId,
+                recipientName: document.getElementById('address-recipient').value,
+                zipCode: document.getElementById('address-zipcode').value,
+                address: document.getElementById('address-address').value,
+                buildingName: document.getElementById('address-building').value
+            };
+            
+            const result = await callAPI('saveAddress', addressData);
+            displayResult('save-address-result', result);
+            
+            // 成功した場合、宛名IDを他のテストフィールドに設定
+            if (result.success && result.data && result.data.id) {
+                document.getElementById('detail-address-id').value = result.data.id;
+                document.getElementById('edit-address-id').value = result.data.id;
+                document.getElementById('delete-address-id').value = result.data.id;
+            }
+        }
+        
+        // 住所候補取得テスト
+        async function testAddressSuggestions() {
+            const zipCode = document.getElementById('zipcode-lookup').value;
+            const result = await callAPI('getAddressSuggestions', { zipCode });
+            
+            const container = document.getElementById('address-suggestions');
+            
+            if (result.success && result.data && result.data.length > 0) {
+                container.innerHTML = '<h6>住所候補:</h6>';
+                result.data.forEach(suggestion => {
+                    const div = document.createElement('div');
+                    div.className = 'alert alert-info py-2';
+                    div.innerHTML = `${suggestion.zipCode}: ${suggestion.address} (使用回数: ${suggestion.count})`;
+                    container.appendChild(div);
+                });
+            } else {
+                container.innerHTML = '<small class="text-muted">該当する住所候補が見つかりませんでした</small>';
+            }
+        }
+        
+        // 宛名一覧取得テスト
+        async function testGetAddressList() {
+            const options = {
+                customerId: document.getElementById('list-customer-id').value || null,
+                page: parseInt(document.getElementById('list-page').value),
+                limit: parseInt(document.getElementById('list-limit').value),
+                sortBy: document.getElementById('list-sort').value,
+                sortOrder: 'asc',
+                includeUsageStats: document.getElementById('include-usage-stats').checked
+            };
+            
+            const result = await callAPI('getAddressList', { options });
+            displayResult('address-list-result', result);
+            
+            // 宛名一覧を表示
+            if (result.success && result.data && result.data.addresses) {
+                displayAddressList(result.data.addresses);
+            }
+        }
+        
+        // 宛名一覧表示
+        function displayAddressList(addresses) {
+            const container = document.getElementById('address-list-display');
+            container.innerHTML = '';
+            
+            if (addresses.length === 0) {
+                container.innerHTML = '<p class="text-muted">宛名データがありません</p>';
+                return;
+            }
+            
+            addresses.forEach(address => {
+                const card = document.createElement('div');
+                card.className = 'address-card';
+                
+                let usageStatsHtml = '';
+                if (address.usageStats) {
+                    usageStatsHtml = `
+                        <div class="usage-stats">
+                            <i class="fas fa-chart-bar"></i>
+                            使用回数: ${address.usageStats.totalUsage}回 | 
+                            累計金額: ${address.usageStats.totalAmount}円 | 
+                            最終使用: ${address.usageStats.lastUsed ? new Date(address.usageStats.lastUsed).toLocaleDateString('ja-JP') : 'なし'}
+                        </div>
+                    `;
+                }
+                
+                card.innerHTML = `
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h6>${address.recipientName}</h6>
+                            <p class="mb-1">${address.zipCode} ${address.address}</p>
+                            ${address.buildingName ? `<p class="mb-1 text-muted">${address.buildingName}</p>` : ''}
+                            ${address.customerInfo ? `<small class="text-secondary">顧客: ${address.customerInfo.name} ${address.customerInfo.companyName ? '(' + address.customerInfo.companyName + ')' : ''}</small>` : ''}
+                            ${usageStatsHtml}
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <button class="btn btn-sm btn-outline-primary" onclick="loadAddressDetail('${address.id}')">
+                                詳細表示
+                            </button>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="loadAddressEdit('${address.id}')">
+                                編集
+                            </button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+        
+        // 宛名詳細を詳細テストに読み込み
+        function loadAddressDetail(addressId) {
+            document.getElementById('detail-address-id').value = addressId;
+            testGetAddressDetail();
+        }
+        
+        // 宛名編集フォームに読み込み
+        function loadAddressEdit(addressId) {
+            document.getElementById('edit-address-id').value = addressId;
+        }
+        
+        // 高度宛名検索テスト
+        async function testAdvancedAddressSearch() {
+            const searchOptions = {
+                query: document.getElementById('search-query').value,
+                zipCodePrefix: document.getElementById('search-zipcode-prefix').value,
+                includeCustomerInfo: document.getElementById('search-include-customer').checked,
+                sortBy: 'relevance',
+                limit: 50
+            };
+            
+            const hasUsageValue = document.getElementById('search-has-usage').value;
+            if (hasUsageValue !== '') {
+                searchOptions.hasUsageHistory = hasUsageValue === 'true';
+            }
+            
+            const result = await callAPI('advancedAddressSearch', { searchOptions });
+            displayResult('address-search-result', result);
+        }
+        
+        // 宛名詳細取得テスト
+        async function testGetAddressDetail() {
+            const addressId = document.getElementById('detail-address-id').value;
+            if (!addressId) {
+                alert('宛名IDを入力してください');
+                return;
+            }
+            
+            const result = await callAPI('getAddressDetail', { addressId });
+            displayResult('address-detail-result', result);
+        }
+        
+        // 宛名複製テスト
+        async function testDuplicateAddress() {
+            const addressId = document.getElementById('detail-address-id').value;
+            if (!addressId) {
+                alert('宛名IDを入力してください');
+                return;
+            }
+            
+            const modifications = {
+                recipientName: '複製テスト宛名'
+            };
+            
+            const result = await callAPI('duplicateAddress', { addressId, modifications });
+            displayResult('address-detail-result', result);
+        }
+        
+        // 宛名更新テスト
+        async function testUpdateAddress() {
+            const addressId = document.getElementById('edit-address-id').value;
+            if (!addressId) {
+                alert('編集対象の宛名IDを入力してください');
+                return;
+            }
+            
+            const updateData = {
+                recipientName: document.getElementById('edit-recipient').value,
+                address: document.getElementById('edit-address').value
+            };
+            
+            const result = await callAPI('updateAddress', { addressId, updateData });
+            displayResult('update-address-result', result);
+        }
+        
+        // 宛名削除テスト
+        async function testDeleteAddress() {
+            const addressId = document.getElementById('delete-address-id').value;
+            const reason = document.getElementById('delete-reason').value;
+            
+            if (!addressId) {
+                alert('削除対象の宛名IDを入力してください');
+                return;
+            }
+            
+            if (!confirm('本当に削除しますか？この操作は元に戻せません。')) {
+                return;
+            }
+            
+            const result = await callAPI('deleteAddress', { addressId, reason });
+            displayResult('delete-address-result', result);
+        }
+        
+        // CSVインポートテスト
+        async function testImportAddresses() {
+            const csvData = document.getElementById('csv-import-data').value;
+            const options = {
+                skipDuplicates: document.getElementById('skip-address-duplicates').checked,
+                validateOnly: document.getElementById('validate-address-only').checked,
+                defaultCustomerId: document.getElementById('default-customer-id').value || null
+            };
+            
+            const result = await callAPI('importAddresses', { csvData, options });
+            displayResult('import-export-result', result);
+        }
+        
+        // CSVエクスポートテスト
+        async function testExportAddresses() {
+            const options = {
+                customerId: document.getElementById('export-customer-id').value || null,
+                includeCustomerInfo: document.getElementById('export-include-customer').checked,
+                includeUsageStats: document.getElementById('export-include-usage').checked
+            };
+            
+            const result = await callAPI('exportAddresses', { options });
+            displayResult('import-export-result', result);
+            
+            // 成功した場合、CSVをダウンロード
+            if (result.success && result.data && result.data.content) {
+                downloadCSV(result.data.content, result.data.filename);
+            }
+        }
+        
+        // CSV ダウンロード
+        function downloadCSV(content, filename) {
+            const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            
+            if (link.download !== undefined) {
+                const url = URL.createObjectURL(blob);
+                link.setAttribute('href', url);
+                link.setAttribute('download', filename);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        }
+        
+        // 全機能統合テスト
+        async function runAllAddressTests() {
+            const testCustomerId = document.getElementById('test-customer-id').value;
+            if (!testCustomerId) {
+                alert('テスト用顧客IDを入力してください');
+                return;
+            }
+            
+            const allTestsResult = document.getElementById('all-address-tests-result');
+            allTestsResult.style.display = 'block';
+            allTestsResult.className = 'test-result';
+            allTestsResult.textContent = '全機能テスト実行中...\n';
+            
+            // テスト用データを設定
+            document.getElementById('address-customer-id').value = testCustomerId;
+            document.getElementById('list-customer-id').value = testCustomerId;
+            
+            const tests = [
+                { name: '宛名登録', func: testSaveAddress },
+                { name: '宛名一覧取得', func: testGetAddressList },
+                { name: '高度検索', func: testAdvancedAddressSearch },
+                { name: '住所候補取得', func: testAddressSuggestions },
+                { name: 'CSVエクスポート', func: testExportAddresses }
+            ];
+            
+            let passedTests = 0;
+            
+            for (const test of tests) {
+                try {
+                    allTestsResult.textContent += `${test.name}テスト実行中...\n`;
+                    await test.func();
+                    allTestsResult.textContent += `${test.name}テスト: 完了\n`;
+                    passedTests++;
+                } catch (error) {
+                    allTestsResult.textContent += `${test.name}テスト: エラー - ${error.message}\n`;
+                }
+                
+                // 少し待機
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+            
+            const allPassed = passedTests === tests.length;
+            allTestsResult.className = allPassed ? 'test-result test-success' : 'test-result test-error';
+            allTestsResult.textContent += `\n全テスト完了: ${passedTests}/${tests.length} 成功`;
+        }
+        
+        // ページ読み込み時の処理
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('PM001 宛名管理機能テストページが読み込まれました');
+        });
+    </script>
+</body>
+</html>

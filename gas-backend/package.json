@@ -1,0 +1,25 @@
+{
+  "name": "gas-backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc",
+    "push": "npm run build && npx clasp push",
+    "deploy": "npm run push && npx clasp deploy",
+    "login": "npx clasp login --no-localhost",
+    "create": "npx clasp create --type webapp --title \"PM001 Shipping System\" --rootDir ./dist",
+    "auto-deploy": "node deploy-automation.js",
+    "open": "npx clasp open",
+    "logs": "npx clasp logs --tail"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@google/clasp": "^3.0.6-alpha",
+    "@types/google-apps-script": "^1.0.99",
+    "typescript": "^5.8.3"
+  }
+}

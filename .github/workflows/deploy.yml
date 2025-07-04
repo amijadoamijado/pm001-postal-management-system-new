@@ -1,0 +1,46 @@
+
+name: Deploy to Google Apps Script and Test
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Build GAS code
+      run: npm run build --prefix gas-backend
+
+    - name: Authenticate with Google
+      uses: 'google-github-actions/auth@v1'
+      with:
+        credentials_json: '${{ secrets.GCP_SA_KEY }}'
+
+    - name: Deploy to Google Apps Script
+      id: deploy
+      run: |
+        export DEPLOY_OUTPUT=$(node gas-backend/deploy-automation.js)
+        export DEPLOY_ID=$(echo "$DEPLOY_OUTPUT" | grep -oP '(?<=Deployment ID: ).*')
+        export WEB_APP_URL="https://script.google.com/macros/s/${DEPLOY_ID}/exec"
+        echo "GAS_WEB_APP_URL=${WEB_APP_URL}" >> $GITHUB_ENV
+      env:
+        SPREADSHEET_ID: ${{ secrets.SPREADSHEET_ID }}
+
+    - name: Run Playwright tests
+      run: npm test
+      env:
+        GAS_WEB_APP_URL: ${{ env.GAS_WEB_APP_URL }}

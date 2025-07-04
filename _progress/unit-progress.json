@@ -1,0 +1,43 @@
+{
+  "project": {
+    "id": "PM001",
+    "name": "郵便物発送管理システム",
+    "status": "進行中",
+    "last_updated": "2025-06-23",
+    "completion_percentage": 75
+  },
+  "phases": {
+    "phase1": {
+      "name": "基盤構築",
+      "status": "完了",
+      "completion_date": "2025-06-15"
+    },
+    "phase2": {
+      "name": "UI実装",
+      "status": "完了", 
+      "completion_date": "2025-06-20"
+    },
+    "phase3": {
+      "name": "統合・テスト",
+      "status": "進行中",
+      "estimated_completion": "2025-06-25"
+    },
+    "phase4": {
+      "name": "デプロイ・検証",
+      "status": "未着手",
+      "estimated_start": "2025-06-25"
+    }
+  },
+  "quality_gates": {
+    "phase1_ai_test": "通過",
+    "phase2_integration_test": "通過",
+    "phase3_deploy_test": "実行中",
+    "phase4_human_verification": "未実施"
+  },
+  "next_actions": [
+    "統合テスト完了",
+    "本番環境デプロイ",
+    "Computer Use動作確認",
+    "人間向けテスト実施"
+  ]
+}

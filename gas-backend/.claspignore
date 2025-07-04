@@ -1,0 +1,12 @@
+**/**
+!dist/**/*.js
+!dist/appsscript.json
+
+# Exclude source files
+src/
+*.ts
+tsconfig.json
+package*.json
+node_modules/
+.git/
+README.md
